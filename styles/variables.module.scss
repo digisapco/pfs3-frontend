@@ -1,0 +1,18 @@
+/* variables.module.scss */
+$font-color: #121212;
+$pink-color: #f9097d;
+$white: #FFF;
+$black: #000;
+$link-header-border-bottom: #f3f3f3;
+$shadow-black-70: rgba(0,0,0,0.7);
+$main-dark: #001F33;
+$blue-light: #94B9D2;
+
+$header-nav-link: #102032;
+
+:export {
+  fontColor : $font-color;
+  pinkColor : $pink-color;
+  blank: $white;
+  black : $black;
+}

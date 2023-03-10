@@ -51,7 +51,7 @@ const ResultMap = (props) => {
     }, [])
 
     const onLoadMarker = marker => {
-        console.log('marker: ', marker)
+        //console.log('marker: ', marker)
     }
     
     const onUnmount = React.useCallback(function callback(map) {
@@ -100,7 +100,7 @@ const ResultMap = (props) => {
                         >
                             {activeMarker === item.mlsId ? (
                                 <InfoWindow onCloseClick={() => setActiveMarker(null)}>
-                                    <ResultItem item={item} inMap={true} />
+                                    <ResultItem item={item} section="map" />
                                 </InfoWindow>
                             ) : null}
                         </MarkerF>

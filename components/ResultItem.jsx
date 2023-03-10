@@ -1,6 +1,7 @@
 import { FaHeart, FaBath, FaBed, FaCube } from 'react-icons/fa';
 import Search from '../styles/search.module.scss';
 import Link from 'next/link';
+
 var slugify = require('slugify');
 
 const ResultItem = ( props ) => {
@@ -9,31 +10,43 @@ const ResultItem = ( props ) => {
     var slugCity = (item.address.city!==null) ? slugify(item.address.city) : slugify('Otra ciudad');
     slugCity = slugCity.toLowerCase() + '-ci';
 
-
     const cssClassBg = `bld-${item.mlsId}`;
     var imageBg = '/img/pfs-empty-logo.jpeg';
     if(item.photosOrigin[0]) {
         imageBg = item.photosOrigin[0];
     }
     var classBg = '';
-    if(!props.inMap) {
+    if(props.section!=="map") {
         classBg = `.${cssClassBg}{
             background-image: url(${imageBg});
             background-image: -webkit-image-set(url(${imageBg}) 1x);
         }`;
     }
 
+    var slugCond = '';
+    var condText = '';
+    switch(item.property.type) {
+        case 'RES': 
+        default: slugCond = 'comprar'; break;
+        case 'RNT': slugCond = 'rentar'; break;
+    }
+
+    var classSelected = '';
+    switch(props.section) {
+        case 'map': classSelected = Search.item_in_map; break;
+        case 'related': classSelected = Search.item_related; break;
+        default: classSelected = Search.result_item;
+    }
+
     return (
-        <div className={
-            props.inMap ? Search.item_in_map : Search.result_item
-        }>
+        <div className={classSelected}>
             <div className={Search.image}>
                 {
-                    !props.inMap ? (
+                    props.section!=="map" ? (
                         <a href="#" className={Search.favorite_icon} data-building={`${item.mlsId}`}></a>
                     ) : null
                 }
-                <Link href={`/casas-y-apartamentos/comprar/${slugCity}/${item.slug}`} target="_blank">
+                <Link href={`/casas-y-apartamentos/${slugCond}/${slugCity}/${item.slug}`} target="_blank">
                     <div className={
                         [
                             Search.photo,
@@ -42,7 +55,7 @@ const ResultItem = ( props ) => {
                     }></div>
                 </Link>
                 {
-                    !props.inMap ? (
+                    props.section!=="map" ? (
                         <style>
                             {classBg}
                         </style>

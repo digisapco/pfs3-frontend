@@ -4,6 +4,7 @@ import Properties from '../../models/Properties';
 import HeaderSecondary from '../../components/HeaderSecondary';
 import SearchFilterDropdown from '../../components/SearchFilterDropdown';
 import ResultItem from '../../components/ResultItem';
+import ResultRelated from '../../components/ResultRelated';
 import SearchStyle from '../../styles/search.module.scss';
 import ResultMap from '../../components/ResultMap';
 import Head from 'next/head';
@@ -101,16 +102,24 @@ const Page = (props) => {
                 </div>
                 <div className={SearchStyle.map}>
                     <ResultMap properties={props.properties} />
+                    <ResultRelated properties={props.propertiesRelated} />
                 </div>
             </div>
         </>
     )
 }
 
+/*
+const getNearestItemRelated = async(type, value) => {
+    const res = await Properties.find({
+        "$type" : { $ne : value }
+    }).limit(1).lean();
+    return res[0].type;
+}
+*/
+
 export async function getServerSideProps(ctx) {
     await dbConnect();
-
-    console.log(ctx.params);
 
     const cond = [
         {
@@ -174,11 +183,29 @@ export async function getServerSideProps(ctx) {
         }
     }
 
+    // Properties
     const properties = [];
     const countProperties = await Properties.find(queryParams).count();
-    const propData = await Properties.find(queryParams).limit(30).lean();
-    propData.forEach(item => {
+    const propertiesData = await Properties.find(queryParams).limit(30).lean();
+
+    propertiesData.forEach(item => {
         properties.push( JSON.parse(JSON.stringify(item)) );
+    });
+
+    // Related
+    const propertiesRelated = [];
+    var queryRelatedParams = {};
+    /*
+    queryRelatedParams.city = (typeof ctx.params.ci !== undefined) ? { $not: getNearestItemRelated("address.city", ctx.req.params.ci) } : 'Miami';
+    queryRelatedParams["address.postalCode"] = (ctx.req.params.zc) ? { $not: getNearestItemRelated("address.postalCode", ctx.req.params.zc) } : 'Miami';
+    queryRelatedParams["geo.county"] = (ctx.req.params.co) ? { $not: getNearestItemRelated("geo.county", ctx.req.params.co) } : 'Miami';
+    */
+    
+    const countPropertiesRelated = await Properties.find(queryRelatedParams).count();
+    const propertiesRelatedData = await Properties.find(queryRelatedParams).limit(30).lean();
+
+    propertiesRelatedData.forEach(itemRelated => {
+        propertiesRelated.push( JSON.parse(JSON.stringify(itemRelated)) );
     });
 
     var defaultValueCond = '';
@@ -207,6 +234,7 @@ export async function getServerSideProps(ctx) {
 
     return { props: { 
         properties,
+        propertiesRelated,
         countProperties,
         pr_rent,
         pr_sale,

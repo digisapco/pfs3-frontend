@@ -25,9 +25,6 @@ const nextConfig = {
             },
             {
                 source: '/casas-y-apartamentos/:params*',
-                has : [
-                    {type : "query", key: "ci"}
-                ],
                 destination: '/search'
             },
             {

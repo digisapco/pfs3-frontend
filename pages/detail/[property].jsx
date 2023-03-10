@@ -1,4 +1,3 @@
-import { useRouter } from 'next/router';
 import dbConnect from '../../lib/dbConnect';
 import Properties from '../../models/Properties';
 
@@ -12,7 +11,10 @@ import Image from 'next/image';
 import DetailMap from '../../components/DetailMap';
 import DetailBoxValue from '../../components/DetailBoxValue';
 import DetailRelated from '../../components/DetailRelated';
+import DetailRelatedText from '../../components/DetailRelatedText';
 import DetailNearestZone from '../../components/DetailNearestZone';
+import DetailGallery from '../../components/DetailGallery';
+
 import { FaHeart, FaBath, FaBed, FaCube } from 'react-icons/fa';
 import slugify from 'slugify';
 
@@ -20,6 +22,8 @@ const DetailPage = (props) => {
     const data = props.propData[0];
     const referrer = props.referrer;
     var propertyTypeBreadcrumb = '/casas-y-apartamentos';
+    const related = props.propertiesRelated;
+    const related_text = props.propertiesRelatedText;
 
     var typeProp = 'Propiedad';
     if(data.property.subType!=='') {
@@ -119,7 +123,7 @@ const DetailPage = (props) => {
                 minimumFractionDigits: 0
             }).format(data.association.fee);
             hoaFee+= ' USD';
-    
+
             switch(data.association.frequency) {
                 case 'Monthly': hoaFee+= ' mensuales'; break;
                 case 'Annually': hoaFee+= ' anuales'; break;
@@ -166,9 +170,9 @@ const DetailPage = (props) => {
                             priceMin!==0 && priceMax==0 ? 
                             (
                                 <li>
-                                <a href={`${propertyTypeBreadcrumb}/${linkBreadcrumb}/${cityRewrite}/${priceMin}p-pr`}>
-                                    Precio desde {`${priceMinFormatted}`}
-                                </a>
+                                    <a href={`${propertyTypeBreadcrumb}/${linkBreadcrumb}/${cityRewrite}/${priceMin}p-pr`}>
+                                        Precio desde {`${priceMinFormatted}`}
+                                    </a>
                                 </li>
                             ) : null
                         }
@@ -187,30 +191,7 @@ const DetailPage = (props) => {
                 </div>
                 <article className={DetailStyle.detail}>
                     <div className={DetailStyle.gallery}>
-                        {
-                            photos.length > 0 ?
-
-                                photos.length > 1 ? 
-                                    (
-                                        <div id="nanogallery">
-                                            {
-                                                photos.map((photo, index) => (
-                                                    <a href={photo} aria-label={`${typeProp} - Foto ${index}`}>
-                                                        <Image src={photo} alt="" className="pfs-image-gallery-inprop" width="300" height="200" />
-                                                    </a>
-                                                ))
-                                            }
-                                        </div>
-                                    ) : (
-                                        <div class="pfs-line-images row">
-                                            <div class="col-12 p-0">
-                                                <Image src={`${photos[0]}`} alt="" id="pfsImageLarge" className="w-100" />
-                                            </div>
-                                        </div>
-                                    )
-                                
-                            : null
-                        }
+                        <DetailGallery photos={photos} />
                     </div>
                     <div className={DetailStyle.columns}>
                         <div className={DetailStyle.col1}>
@@ -219,13 +200,11 @@ const DetailPage = (props) => {
                                     <h1>{typeProp} {labelCondition.toLowerCase()} en {data.address.full}</h1>
                                     <h2>{data.address.full}</h2>
                                     <div>
-                                        <div><FaBath /> {data.property.bathsFull}ba</div>
-                                        <div>&nbsp;</div>
-                                        <div><FaBed /> {data.property.bedrooms}hb</div>
-                                        <div>&nbsp;</div>
-                                        <div><FaCube /> {
-                                            data.property.area
-                                        }sqft</div>
+                                        <FaBath /> &nbsp; {`${data.property.bathsFull}`}ba &nbsp;
+                                    
+                                        <FaBed /> &nbsp; {`${data.property.bedrooms}`}hb &nbsp;
+                                    
+                                        <FaCube /> &nbsp; {`${data.property.area}`}sqft
                                     </div>
                                 </div>
                                 <div>
@@ -284,12 +263,16 @@ const DetailPage = (props) => {
                             </div>
                             <div className={DetailStyle.related_properties}>
                                 <h3>Otras propiedades relacionadas</h3>
-                                <DetailRelated />
+                                <DetailRelated properties={related} />
                             </div>
-                            <div className={DetailStyle.nearest_zone}>
-                                <h3>Nuevos listados cerca de tu zona</h3>
-                                <DetailNearestZone />
-                            </div>
+                            {
+                                /*
+                                <div className={DetailStyle.nearest_zone}>
+                                    <h3>Nuevos listados cerca de tu zona</h3>
+                                    <DetailNearestZone />
+                                </div>
+                                */
+                            }
                         </div>
                         <div className={DetailStyle.col2}>
                             <div className={DetailStyle.interested}>
@@ -302,6 +285,10 @@ const DetailPage = (props) => {
                                     Solicitar Asesoría
                                 </a>
                             </div>
+                            <div className={DetailStyle.related_text}>
+                                <h5>Otras personas también buscaron</h5>
+                                <DetailRelatedText properties={related_text} />
+                            </div>
                         </div>
                     </div>
                 </article>
@@ -313,6 +300,7 @@ const DetailPage = (props) => {
 export async function getServerSideProps(ctx) {
     await dbConnect();
 
+    // Property
     let slug = ctx.params.property.split('-');
     let idMls = slug.slice(-1)[0];
 
@@ -323,7 +311,61 @@ export async function getServerSideProps(ctx) {
     let propData = JSON.parse(JSON.stringify(property));
     let referrer = ctx.req.headers.referer
 
-    return { props: { propData, referrer } }
+    // Related
+    const propertiesRelated_query = await Properties.find({
+        "address.city" : propData[0].address.city,
+        "property.type" : propData[0].property.type,
+        mlsId : { $ne : propData[0].mlsId }
+    },{
+        _id : 0,
+        mlsId : 1,
+        slug : 1,
+        address : {
+            full : 1,
+            city : 1,
+            state : 1,
+            postalCode : 1
+        },
+        property : {
+            subTypeText : 1,
+            area : 1,
+            bathsFull : 1,
+            bedrooms : 1,
+            type : 1
+        },
+        photosOrigin : 1,
+        listPrice : 1
+    }).limit(6).lean();
+    const propertiesRelated = JSON.parse(JSON.stringify(propertiesRelated_query));
+    
+    // Related text
+    const propertiesRelatedText_query = await Properties.find({
+        "address.city" : propData[0].address.city,
+        "property.type" : propData[0].property.type,
+        mlsId : { $ne : propData[0].mlsId }
+    },{
+        mlsId : 1,
+        slug : 1,
+        address : {
+            full : 1,
+            city : 1,
+            state : 1,
+            postalCode : 1
+        },
+        property : {
+            subTypeText : 1,
+            area : 1,
+            bathsFull : 1,
+            bedrooms : 1,
+            type : 1,
+            yearBuilt : 1
+        },
+        listPrice : 1
+    })
+    .lean().limit(8);
+    const propertiesRelatedText = JSON.parse(JSON.stringify(propertiesRelatedText_query));
+
+    return { props: { propData, referrer, propertiesRelated, propertiesRelatedText } }
 
 }
 

@@ -1,51 +1,48 @@
-import React, { useState, useCallback } from "react";
-import { render } from "react-dom";
-import Gallery from "react-photo-gallery";
-import Carousel, { Modal, ModalGateway } from "react-images";
+import { useState } from "react";
+
+import PhotoAlbum from "react-photo-album";
+
+import Lightbox from "yet-another-react-lightbox";
+import "yet-another-react-lightbox/styles.css";
+
+// import optional lightbox plugins
+import Fullscreen from "yet-another-react-lightbox/plugins/fullscreen";
+import Slideshow from "yet-another-react-lightbox/plugins/slideshow";
+import Thumbnails from "yet-another-react-lightbox/plugins/thumbnails";
+import Zoom from "yet-another-react-lightbox/plugins/zoom";
+import "yet-another-react-lightbox/plugins/thumbnails.css";
 
 const DetailGallery = ({photos}) => {
-    const images = [];
+    const [index, setIndex] = useState(-1);
 
-    photos.map((photo, index) => {
-        images.push({
-            src: photo,
-            width: (index%2 == 0) ? 4 : 1,
-            height: (index%2 == 0) ? 3 : 1
-        })
-    })
+    const photosRender = [];
+    photos.map((image, i) => {
+        photosRender.push({
+            src : image,
+            width: 800,
+            height: 600
+        });
+    });
 
-    const [currentImage, setCurrentImage] = useState(0);
-    const [viewerIsOpen, setViewerIsOpen] = useState(false);
-
-    const openLightbox = useCallback((event, { photo, index }) => {
-        setCurrentImage(index);
-        setViewerIsOpen(true);
-    }, []);
-
-    const closeLightbox = () => {
-        setCurrentImage(0);
-        setViewerIsOpen(false);
-    };
+    const slides = photosRender.map(({ src, width, height }) => ({
+        src,
+        width,
+        height
+    }));
 
     return (
         <>
-            <Gallery photos={images} onClick={openLightbox} columns={6} />
-            <ModalGateway>
-                {viewerIsOpen ? (
-                <Modal onClose={closeLightbox}>
-                    <Carousel
-                    currentIndex={currentImage}
-                    views={photos.map(x => ({
-                        ...x,
-                        srcset: x.srcSet,
-                        caption: x.title
-                    }))}
-                    />
-                </Modal>
-                ) : null}
-            </ModalGateway>
+            <PhotoAlbum photos={photosRender} layout="rows" targetRowHeight={150} onClick={({ index }) => setIndex(index)} />
+            <Lightbox
+                slides={slides}
+                open={index >= 0}
+                index={index}
+                close={() => setIndex(-1)}
+                // enable optional lightbox plugins
+                plugins={[Fullscreen, Slideshow, Thumbnails, Zoom]}
+            />
         </>
     )
 }
 
-export default DetailGallery
+export default DetailGallery;

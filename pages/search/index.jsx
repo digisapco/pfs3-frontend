@@ -256,7 +256,7 @@ export async function getServerSideProps(ctx) {
                 var countyRef = params[index + 1].replace(/\b\w/g, l => l.toUpperCase()).replaceAll('-', ' ');
                 queryParams['geo.county'] = countyRef;
                 defaultValueCo = params[index + 1];
-                title+= ' en el condado ' + cityRef.replace('County','');
+                title+= ' en el condado ' + countyRef.replaceAll('County','');
 
                 var linkIn = '/casas-y-apartamentos';
                 switch(defaultValueCond) {

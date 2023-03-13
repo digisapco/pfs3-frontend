@@ -25,7 +25,7 @@ const nextConfig = {
             },
             {
                 source: '/casas-y-apartamentos/:params*',
-                destination: '/search'
+                destination: '/search?searchParams=:paramsSlug'
             },
             {
                 source: '/casas-y-apartamentos',

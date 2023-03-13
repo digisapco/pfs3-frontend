@@ -1,4 +1,9 @@
+import dbConnect from "../lib/dbConnect";
+import Subtypes from '../models/Subtypes';
+import Conds from '../models/Conds';
+
 import { Inter } from "next/font/google";
+import { useRouter } from 'next/router';
 import HomeStyle from '../styles/home.module.scss';
 import PropertiesPerCity from '../components/PropertiesPerCity';
 import HomeSearchBox from '../components/HomeSearchBox';
@@ -9,13 +14,15 @@ import Header from '../components/header';
 
 const inter = Inter({ subsets: ['latin'] })
 
-export default function Home() {
+const Index = ( props ) => {
+
+    const router = useRouter();
     return (
         <>
             <Header home={true} />
             <div className={HomeStyle.search_box}>
                 <h1>Con <strong>PFS Realty</strong> es más facil</h1>
-                <HomeSearchBox />
+                <HomeSearchBox conds={props.conds} subtypes={props.subtypes} router={router} />
             </div>
             <div className={HomeStyle.properties}>
                 <h2>Encuentra tu propiedad en Miami</h2>
@@ -46,3 +53,25 @@ export default function Home() {
         </>
     )
 }
+
+export async function getServerSideProps(ctx) {
+    await dbConnect();
+
+    // Get cond
+    const conds = await Conds.find();
+
+    // Get subtypes
+    const subtypes = await Subtypes.find({
+        exclude_search : 0
+    }).lean();
+
+    return {
+        props : {
+            subtypes : JSON.parse(JSON.stringify(subtypes)),
+            conds : JSON.parse(JSON.stringify(conds))
+        }
+    }
+
+}
+
+export default Index;

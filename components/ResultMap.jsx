@@ -27,10 +27,12 @@ const ResultMap = (props) => {
         if (map) {
             const bounds = new window.google.maps.LatLngBounds();
             props.properties.map(marker => {
-                bounds.extend({
-                    lat: marker.geo.lat,
-                    lng: marker.geo.lng
-                });
+                if(marker.geo.lat !== null && marker.geo.lng !== null) {
+                    bounds.extend({
+                        lat: marker.geo.lat,
+                        lng: marker.geo.lng
+                    });
+                }
             });
             map.fitBounds(bounds);
         }

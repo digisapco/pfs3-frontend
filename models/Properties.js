@@ -2,7 +2,6 @@ import mongoose from 'mongoose'
 
 const PropertiesSchema = new mongoose.Schema({
     mlsId   : String,
-    name    : String,
     slug    : {
         type: String,
         unique: true

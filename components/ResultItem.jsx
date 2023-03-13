@@ -26,9 +26,14 @@ const ResultItem = ( props ) => {
     var slugCond = '';
     var condText = '';
     switch(item.property.type) {
-        case 'RES': 
-        default: slugCond = 'comprar'; break;
-        case 'RNT': slugCond = 'rentar'; break;
+        case 'RES':
+            slugCond = 'comprar';
+        break;
+        case 'RNT':
+            slugCond = 'rentar';
+        break;
+        case (item.type=='RES' && item.mls.status!=='Active'):
+            slugCond = 'vendido';
     }
 
     var classSelected = '';
@@ -74,11 +79,23 @@ const ResultItem = ( props ) => {
                         }
                     </div>
                     <div className={Search.features}>
-                        <div><FaBath /> {`${item.property.bathsFull}ba`}</div>
+                        {
+                            (item.property.bathsFull!==null) ? (
+                                <div><FaBath /> {`${item.property.bathsFull}ba`}</div>
+                            ) : null
+                        }
                         <div>&nbsp;</div>
-                        <div><FaBed /> {`${item.property.bathsFull}ha`}</div>
+                        {
+                            item.property.bathsFull!==null ? (
+                                <div><FaBed /> {`${item.property.bathsFull}ha`}</div>
+                            ) : null
+                        }
                         <div>&nbsp;</div>
-                        <div><FaCube /> {`${item.property.area}sqft`}</div>
+                        {
+                            item.property.area!==null ? (
+                                <div><FaCube /> {`${item.property.area}sqft`}</div>
+                            ) : null
+                        }
                     </div>
                     <div className={Search.address}>
                         <h2>
